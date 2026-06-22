@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: tecnoservi360_pgvector
+    environment:
+      POSTGRES_DB: tecnoservi360
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgvector_tecnoservi360_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build: .
+    container_name: tecnoservi360_streamlit
+    depends_on:
+      - postgres
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: streamlit run app.py --server.address=0.0.0.0 --server.port=8501
+
+  loader:
+    build: .
+    container_name: tecnoservi360_loader
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: python cargar_datos.py
+
+volumes:
+  pgvector_tecnoservi360_data:
